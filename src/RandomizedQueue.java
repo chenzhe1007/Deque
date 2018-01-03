@@ -1,6 +1,7 @@
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import edu.princeton.cs.algs4.StdRandom;
+import edu.princeton.cs.algs4.StdOut;
 
 /**
  * Created by ZChen on 1/2/2018.
@@ -9,45 +10,12 @@ import edu.princeton.cs.algs4.StdRandom;
 public class RandomizedQueue<Item> implements Iterable<Item> {
 
     private Item[] s = null;
-    private int end, size;
-    private QueueOfStrings empSpace;
-    private class QueueOfStrings {
+    private int end, size, start;
 
-        private Node first, last;
-        private class Node {
-            int item;
-            Node next;
-        }
-
-        public boolean isEmpty() {
-            return first == null;
-        }
-
-        public int dequeue() {
-            int item = first.item;
-            first = first.next;
-            if (isEmpty()) {
-                last = null;
-            }
-            return item;
-        }
-
-        public void enqueue(int item) {
-            Node oldLast = last;
-            last = new Node();
-            last.item = item;
-            if (isEmpty()) {
-                first = last;
-            } else {
-                oldLast.next = last;
-            }
-        }
-    }
 
     public RandomizedQueue() {
         s = (Item[]) new Object[1];
-        end = size = 0;
-        empSpace = new QueueOfStrings();
+        end = size = start = 0;
     }
 
     public boolean isEmpty() {
@@ -71,7 +39,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             resize(2*s.length);
             s[end++] = item;
         } else if (end == s.length) {
-            s[empSpace.dequeue()] = item;
+            s[--start] = item;
         } else {
             s[end++] = item;
         }
@@ -81,19 +49,20 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-        int index = StdRandom.uniform(end);
-        while (s[index] == null) {
-            index = StdRandom.uniform(end);
-        }
+        int index = StdRandom.uniform(start, end);
         Item ans = s[index];
-        s[index] = null;
+        if (index != start) {
+            s[index] = s[start];
+            s[start++] = null;
+        } else {
+            start++;
+        }
         size--;
         if (!isEmpty() && size == s.length/4) {
             resize(s.length/2);
         } else if (isEmpty()) {
             end = 0;
-        } else {
-            empSpace.enqueue(index);
+            start = 0;
         }
         return ans;
     }
@@ -103,10 +72,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             throw new NoSuchElementException();
         }
 
-        int index = StdRandom.uniform(end);
-        while (s[index] == null) {
-            index = StdRandom.uniform(end);
-        }
+        int index = StdRandom.uniform(start, end);
         return s[index];
     }
 
@@ -120,14 +86,12 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         private int current;
         public ListIterator() {
             items = (Item[]) new Object[size()];
-            for (int i = 0, j = 0; i < s.length && i < end; i++) {
-                if (s[i] == null) {
-                    continue;
-                }
-                items[j++] = s[i];
+            for (int i = start,j = 0; i < end; i++,j++) {
+                items[j] = s[i];
             }
             StdRandom.shuffle(items);
             current = 0;
+
         }
         public boolean hasNext() {
             return current < items.length;
@@ -147,26 +111,27 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     private void resize(int capacity) {
         Item[] newS = (Item[]) new Object[capacity];
         int j = 0;
-        for (int i = 0; i < s.length && i < end; i++) {
-            if (s[i] == null) {
-                continue;
-            }
-            newS[j++] = s[i];
+
+        for (int i = start; i < end; i++,j++) {
+            newS[j] = s[i];
         }
         s = newS;
         end = j;
-        empSpace = new QueueOfStrings();
+        start = 0;
     }
 
     public static void main(String[] args) {
         RandomizedQueue<String> rq = new RandomizedQueue<String>();
-        for (int i = 0; i < 20; i++) {
-            if (i % 2 == 0) {
-                rq.enqueue(String.valueOf(i));
+        for (int i = 0; i < 15; i++) {
+            if (i % 5 == 1) {
+                StdOut.println("deque value: " + rq.dequeue());
             } else {
-                rq.dequeue();
+                rq.enqueue(String.valueOf(i));
             }
-            rq.enqueue(String.valueOf(i));
+        }
+        StdOut.print(rq.size() + "\n");
+        for (String item : rq) {
+            StdOut.print(item + ",");
         }
     }
 }
