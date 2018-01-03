@@ -1,3 +1,5 @@
+import edu.princeton.cs.algs4.StdRandom;
+
 /**
  * Created by Luke on 1/1/18.
  */
@@ -33,5 +35,12 @@ public class QueueOfStrings{
         first = first.next;
         if (isEmpty()) last = null;
         return ans;
+    }
+
+    public static void main(String[] args){
+        int[] a = StdRandom.permutation(10);
+        for (int i = 0; i < a.length; i++) {
+            System.out.println(a[i]);
+        }
     }
 }
